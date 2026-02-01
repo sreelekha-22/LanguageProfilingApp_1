@@ -41,8 +41,10 @@ PORT=5000
 
 **Note on Hugging Face API Key:**
 - **Hugging Face Inference API**: Completely free! Get your API key from https://huggingface.co/settings/tokens
-- The API key is optional for some models, but recommended for better rate limits
+- **IMPORTANT**: An API key is now recommended as many models require authentication
+- Create a token with "Read" permissions at https://huggingface.co/settings/tokens
 - No credit card required - completely free to use
+- If you see 410 errors, it means models are unavailable - try getting an API key or check Hugging Face status
 
 3. Start the application:
 ```bash

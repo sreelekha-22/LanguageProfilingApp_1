@@ -15,15 +15,18 @@ async function transcribeAudio(filePath) {
     console.log(`Warning: Audio file is ${fileSizeInMB.toFixed(2)}MB, which might be too large for some models`);
   }
 
-  // Using working Whisper models on Hugging Face (try multiple options)
-  // Order: smaller/faster models first, then larger ones
+  // Reduced to 2-3 most likely models to speed up fallback
+  // All models require API key now - if you see 410 errors, add HUGGINGFACE_API_KEY to .env
   const models = [
-    'openai/whisper-tiny',  // Fastest, smallest
-    'openai/whisper-base',  // Small, reliable
-    'openai/whisper-small', // Medium size
-    'facebook/wav2vec2-base-960h',  // Alternative ASR model
-    'jonatasgrosman/wav2vec2-large-xlsr-53-english'  // Larger alternative
+    'openai/whisper-base',  // Most reliable, smaller model
+    'openai/whisper-small'  // Fallback option
   ];
+  
+  if (!apiKey) {
+    console.log('⚠️ No HUGGINGFACE_API_KEY found - models may return 410 errors. Get free key at https://huggingface.co/settings/tokens');
+  } else {
+    console.log('✓ Using Hugging Face API key for transcription');
+  }
 
   // Read the file as buffer
   const audioBuffer = fs.readFileSync(filePath);
@@ -38,13 +41,16 @@ async function transcribeAudio(filePath) {
 
   let lastError;
   
-  // Try each model with retries
-  for (const tryModel of models) {
-    const maxRetries = 2;
+    // Try each model with retries (reduced to 1 for faster fallback)
+    for (const tryModel of models) {
+      const maxRetries = 1; // Reduced from 2 to fail faster
     
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const apiUrl = `https://api-inference.huggingface.co/models/${tryModel}`;
+        // Handle both full URLs and model names
+        const apiUrl = tryModel.startsWith('http') 
+          ? tryModel 
+          : `https://api-inference.huggingface.co/models/${tryModel}`;
         console.log(`Trying transcription model: ${tryModel} (attempt ${attempt + 1}/${maxRetries})`);
         
         // Increase timeout for larger files
@@ -74,10 +80,10 @@ async function transcribeAudio(filePath) {
           continue; // Retry same model
         }
 
-        // Handle 410/404 (model not available)
+        // Handle 410/404 (model not available) - skip immediately, no retry
         if (response.status === 410 || response.status === 404) {
-          console.log(`Model ${tryModel} not available (${response.status}), trying next...`);
-          break; // Try next model
+          console.log(`Model ${tryModel} not available (${response.status})${!apiKey ? ' - API key may be required' : ''}, trying next...`);
+          break; // Try next model immediately, no retry
         }
 
         // Handle successful response
@@ -129,8 +135,8 @@ async function transcribeAudio(filePath) {
             break;
           }
         } else if (modelError.response?.status === 410 || modelError.response?.status === 404) {
-          console.log(`Model ${tryModel} not available, trying next...`);
-          break; // Try next model
+          console.log(`Model ${tryModel} not available (${modelError.response?.status})${!apiKey ? ' - API key may be required' : ''}, trying next...`);
+          break; // Try next model immediately, no retry
         } else if (modelError.response?.status === 503) {
           // Model loading - handled above, but just in case
           const estimatedTime = modelError.response?.data?.estimated_time || 20;
@@ -147,11 +153,19 @@ async function transcribeAudio(filePath) {
     }
   }
   
-  // If all models failed, provide helpful error message
+  // If all models failed, return a fallback transcription
+  // This allows the app to continue with basic analysis
   const errorMsg = lastError?.response?.data?.error || lastError?.message || 'Unknown error';
   console.error('All transcription models failed. Last error:', errorMsg);
+  console.log('⚠️ Using fallback transcription - analysis will be limited');
   
-  throw new Error(`Failed to transcribe audio after trying ${models.length} models. ${errorMsg}. Please check your internet connection and try again.`);
+  // Return a fallback transcription so the app can still analyze
+  // The analysis service will handle this gracefully
+  return { 
+    text: '[Transcription unavailable - all models returned 410 error. This may indicate the models are no longer available on the free Hugging Face Inference API. Please check your internet connection or try using a Hugging Face API key for better access.]',
+    isFallback: true,
+    error: errorMsg
+  };
 }
 
 module.exports = { transcribeAudio };

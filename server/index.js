@@ -77,11 +77,18 @@ app.post('/api/analyze', upload.single('recording'), async (req, res) => {
     
     // Handle transcription result
     let transcriptionText = '';
+    let transcriptionWarning = null;
     if (transcription.status === 'fulfilled' && transcription.value?.text) {
       transcriptionText = transcription.value.text;
+      if (transcription.value.isFallback) {
+        transcriptionWarning = 'Transcription service unavailable - using fallback. Analysis may be limited.';
+        console.warn(transcriptionWarning);
+      }
     } else {
       console.error('Transcription failed:', transcription.reason);
-      return res.status(500).json({ error: 'Failed to transcribe audio: ' + (transcription.reason?.message || 'Unknown error') });
+      // Instead of failing completely, use a fallback
+      transcriptionText = '[Transcription failed - unable to process audio. Please check your internet connection and Hugging Face API status.]';
+      transcriptionWarning = 'Transcription service unavailable. Analysis will be limited.';
     }
 
     // Handle facial analysis result
@@ -125,7 +132,8 @@ app.post('/api/analyze', upload.single('recording'), async (req, res) => {
     res.json({
       transcription: transcriptionText,
       analysis: languageAnalysis,
-      round: round
+      round: round,
+      warning: transcriptionWarning
     });
   } catch (error) {
     console.error('Error processing recording:', error);

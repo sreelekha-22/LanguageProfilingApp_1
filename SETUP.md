@@ -43,8 +43,9 @@
 **Free Tier Details:**
 - Hugging Face Inference API is completely free
 - No credit card required
-- Uses state-of-the-art models: Whisper Large v2 for transcription, Mistral-7B for analysis
-- Optional API key for better rate limits (works without it too)
+- Uses state-of-the-art models: Whisper Large v3/v2 for transcription, Mistral-7B for analysis
+- **API key is now recommended** - many models require authentication to access
+- Without an API key, you may see 410 errors indicating models are unavailable
 
 ## Troubleshooting
 
@@ -53,10 +54,11 @@
 - Check browser settings if recording doesn't start
 
 ### API Errors
-- Verify your Hugging Face API key is correct (if using one)
-- Models may take a few seconds to load on first use (cold start)
-- If you get a 503 error, the model is loading - wait a moment and try again
-- The app will use fallback analysis if the API is unavailable
+- **410 Errors (Model Unavailable)**: Many models now require an API key. Get one from https://huggingface.co/settings/tokens
+- **Socket Hang Up**: Network issue or model timeout - the app will retry automatically
+- **503 Errors**: Model is loading (cold start) - wait a moment and try again
+- The app will use fallback transcription if all models fail, allowing basic analysis to continue
+- Verify your Hugging Face API key is correct and has "Read" permissions
 
 ### Port Already in Use
 - Change the PORT in `.env` if 5000 is already in use

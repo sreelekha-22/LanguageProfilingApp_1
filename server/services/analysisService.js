@@ -5,13 +5,18 @@ async function analyzeLanguage(transcription, round, userTopic) {
   try {
     const apiKey = process.env.HUGGINGFACE_API_KEY;
     
-    // Using free text generation models from Hugging Face
-    // Using models that are reliably available on free tier
+    // Reduced to 2 models to speed up fallback
+    // All models require API key now - if you see 410 errors, add HUGGINGFACE_API_KEY to .env
     const models = [
       'mistralai/Mistral-7B-Instruct-v0.2',  // Best quality if available
       'google/flan-t5-base'  // Reliable fallback
     ];
-    let apiUrl = `https://api-inference.huggingface.co/models/${models[0]}`;
+    
+    if (!apiKey) {
+      console.log('⚠️ No HUGGINGFACE_API_KEY found - models may return 410 errors. Get free key at https://huggingface.co/settings/tokens');
+    } else {
+      console.log('✓ Using Hugging Face API key for analysis');
+    }
 
     const prompt = `Analyze the following spoken language transcript and provide a comprehensive language profile. 
     
@@ -50,92 +55,183 @@ Return ONLY a valid JSON object with this exact structure:
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    const payload = {
-      inputs: `<s>[INST] You are a language assessment expert. Always respond with valid JSON only, no additional text. ${prompt} [/INST]`,
-      parameters: {
-        max_new_tokens: 2000,
-        temperature: 0.3,
-        return_full_text: false
-      }
-    };
-
     let response;
-    try {
-      response = await axios.post(apiUrl, payload, {
-        headers: headers,
-        timeout: 60000
-      });
-    } catch (firstError) {
-      // If first model fails and it's a 503 or 429, try fallback model
-      if ((firstError.response?.status === 503 || firstError.response?.status === 429) && models.length > 1) {
-        console.log(`Model ${models[0]} unavailable, trying fallback model ${models[1]}`);
-        apiUrl = `https://api-inference.huggingface.co/models/${models[1]}`;
-        // Adjust prompt format for Flan-T5
-        payload.inputs = prompt;
-        response = await axios.post(apiUrl, payload, {
-          headers: headers,
-          timeout: 60000
-        });
-      } else {
-        throw firstError;
+    let lastError;
+    let analysis = null;
+    
+    // Try each model with retries
+    for (let modelIndex = 0; modelIndex < models.length; modelIndex++) {
+      const tryModel = models[modelIndex];
+      const apiUrl = `https://api-inference.huggingface.co/models/${tryModel}`;
+      const maxRetries = 1; // Reduced from 2 to fail faster
+      
+      // Determine prompt format based on model
+      let formattedPrompt = prompt;
+      if (tryModel.includes('mistral') || tryModel.includes('Mixtral')) {
+        formattedPrompt = `<s>[INST] You are a language assessment expert. Always respond with valid JSON only, no additional text. ${prompt} [/INST]`;
+      } else if (tryModel.includes('flan')) {
+        formattedPrompt = `Task: Analyze language transcript. ${prompt}`;
+      }
+      
+      const payload = {
+        inputs: formattedPrompt,
+        parameters: {
+          max_new_tokens: 2000,
+          temperature: 0.3,
+          return_full_text: false
+        }
+      };
+      
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          console.log(`Trying analysis model: ${tryModel} (attempt ${attempt + 1}/${maxRetries})`);
+          
+          response = await axios.post(apiUrl, payload, {
+            headers: headers,
+            timeout: 90000, // 90 seconds
+            validateStatus: function (status) {
+              return status < 500; // Don't throw on 4xx errors
+            }
+          });
+          
+          // Handle 503 (model loading)
+          if (response.status === 503) {
+            const estimatedTime = response.data?.estimated_time || 20;
+            const waitTime = Math.min(estimatedTime * 1000, 30000);
+            console.log(`Model ${tryModel} is loading, waiting ${waitTime}ms...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue; // Retry same model
+          }
+          
+          // Handle 410/404 (model not available) - skip immediately
+          if (response.status === 410 || response.status === 404) {
+            console.log(`Model ${tryModel} not available (${response.status})${!apiKey ? ' - API key may be required' : ''}, trying next...`);
+            break; // Try next model immediately
+          }
+          
+          // Handle successful response
+          if (response.status === 200) {
+            let content = '';
+            if (Array.isArray(response.data) && response.data[0]?.generated_text) {
+              content = response.data[0].generated_text.trim();
+            } else if (response.data?.generated_text) {
+              content = response.data.generated_text.trim();
+            } else if (typeof response.data === 'string') {
+              content = response.data.trim();
+            }
+            
+            if (content) {
+              // Try to extract JSON from the response
+              try {
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                  analysis = JSON.parse(jsonMatch[0]);
+                  console.log(`✓ Analysis successful using ${tryModel}`);
+                  return analysis;
+                } else {
+                  analysis = JSON.parse(content);
+                  console.log(`✓ Analysis successful using ${tryModel}`);
+                  return analysis;
+                }
+              } catch (parseError) {
+                console.log(`Failed to parse JSON from ${tryModel}, trying next model...`);
+                break; // Try next model
+              }
+            }
+          }
+          
+        } catch (modelError) {
+          lastError = modelError;
+          const errorMessage = modelError.message || '';
+          const isSocketError = errorMessage.includes('socket hang up') || 
+                               errorMessage.includes('ECONNRESET') ||
+                               errorMessage.includes('ETIMEDOUT') ||
+                               errorMessage.includes('timeout');
+          
+          if (isSocketError) {
+            console.log(`Network error with ${tryModel}: ${errorMessage}`);
+            if (attempt < maxRetries - 1) {
+              const waitTime = Math.min(2000 * Math.pow(2, attempt), 10000);
+              console.log(`Waiting ${waitTime}ms before retry...`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+              continue; // Retry same model
+            } else {
+              break; // Move to next model
+            }
+          } else if (modelError.response?.status === 410 || modelError.response?.status === 404) {
+            console.log(`Model ${tryModel} not available (${modelError.response?.status})${!apiKey ? ' - API key may be required' : ''}, trying next...`);
+            break; // Try next model immediately
+          } else if (modelError.response?.status === 503) {
+            const estimatedTime = modelError.response?.data?.estimated_time || 20;
+            const waitTime = Math.min(estimatedTime * 1000, 30000);
+            console.log(`Model ${tryModel} is loading, waiting ${waitTime}ms...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue; // Retry same model
+          } else {
+            console.log(`Error with ${tryModel}: ${errorMessage.substring(0, 100)}`);
+            break; // Try next model
+          }
+        }
       }
     }
-
-    let content = '';
-    if (Array.isArray(response.data) && response.data[0]?.generated_text) {
-      content = response.data[0].generated_text.trim();
-    } else if (response.data?.generated_text) {
-      content = response.data.generated_text.trim();
-    } else if (typeof response.data === 'string') {
-      content = response.data.trim();
-    } else {
-      throw new Error('Unexpected response format from Hugging Face API');
-    }
     
-    // Try to extract JSON from the response
-    let analysis;
-    try {
-      // Remove markdown code blocks if present
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        analysis = JSON.parse(content);
-      }
-    } catch (parseError) {
-      console.error('Failed to parse JSON:', content);
-      // Fallback analysis
-      analysis = createFallbackAnalysis(transcription);
-    }
-
-    return analysis;
-  } catch (error) {
-    console.error('Analysis error:', error.response?.data || error.message);
-    
-    // If model is loading, use fallback immediately (faster than waiting)
-    if (error.response?.status === 503) {
-      console.log('Model is loading, using fallback analysis');
+    // If all models failed, use fallback
+    if (!analysis) {
+      console.log('⚠️ All analysis models failed, using fallback analysis');
       return createFallbackAnalysis(transcription);
     }
-    
-    // Return fallback analysis if API fails
+
+    // This code should not be reached, but just in case
+    return createFallbackAnalysis(transcription);
+  } catch (error) {
+    console.error('Analysis error:', error.response?.data || error.message);
     return createFallbackAnalysis(transcription);
   }
 }
 
 function createFallbackAnalysis(transcription) {
-  const words = transcription.split(/\s+/).length;
-  const fillers = (transcription.match(/\b(um|uh|like|you know|well|so)\b/gi) || []).length;
+  // Skip if transcription is a fallback message
+  if (transcription.includes('[Transcription unavailable') || transcription.includes('Transcription failed')) {
+    return {
+      fluency: { score: 0, comments: "Analysis unavailable - transcription service failed" },
+      vocabulary: { score: 0, comments: "Analysis unavailable - transcription service failed", sophisticatedWords: [] },
+      grammar: { score: 0, comments: "Analysis unavailable - transcription service failed", errors: [] },
+      fillers: { count: 0, list: [], pauseFrequency: "unknown" },
+      sentiment: { tone: "neutral", confidence: "unknown", comments: "Analysis unavailable - transcription service failed" },
+      structure: { score: 0, hasIntroduction: false, hasBody: false, hasConclusion: false, comments: "Analysis unavailable - transcription service failed" },
+      confidenceMarkers: { positive: [], negative: [] },
+      complexity: { cefrLevel: "N/A", comments: "Analysis unavailable - transcription service failed" }
+    };
+  }
+  
+  // Basic analysis based on transcription text
+  const words = transcription.split(/\s+/).filter(w => w.length > 0).length;
+  const sentences = transcription.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+  const fillers = (transcription.match(/\b(um|uh|like|you know|well|so|er|ah)\b/gi) || []).length;
+  const avgWordsPerSentence = sentences > 0 ? words / sentences : 0;
+  
+  // Estimate scores based on basic metrics
+  const fluencyScore = Math.min(100, Math.max(40, 70 - (fillers * 2)));
+  const vocabularyScore = avgWordsPerSentence > 15 ? 75 : avgWordsPerSentence > 10 ? 65 : 55;
+  const grammarScore = words > 50 ? 70 : 60;
+  const structureScore = sentences >= 3 ? 65 : 50;
+  
+  // Estimate CEFR level
+  let cefrLevel = "B1";
+  if (avgWordsPerSentence > 20 && words > 100) cefrLevel = "B2";
+  else if (avgWordsPerSentence > 15 && words > 80) cefrLevel = "B1";
+  else if (words > 50) cefrLevel = "A2";
+  else cefrLevel = "A1";
   
   return {
-    fluency: { score: 70, comments: "Analysis unavailable - using basic metrics" },
-    vocabulary: { score: 70, comments: "Basic vocabulary assessment", sophisticatedWords: [] },
-    grammar: { score: 70, comments: "Basic grammar assessment", errors: [] },
+    fluency: { score: fluencyScore, comments: `Basic analysis: ${words} words, ${sentences} sentences. Fillers detected: ${fillers}` },
+    vocabulary: { score: vocabularyScore, comments: `Basic vocabulary assessment based on average ${avgWordsPerSentence.toFixed(1)} words per sentence`, sophisticatedWords: [] },
+    grammar: { score: grammarScore, comments: "Basic grammar assessment - detailed analysis unavailable", errors: [] },
     fillers: { count: fillers, list: [], pauseFrequency: fillers > 10 ? "high" : fillers > 5 ? "medium" : "low" },
-    sentiment: { tone: "neutral", confidence: "medium", comments: "Unable to assess sentiment" },
-    structure: { score: 60, hasIntroduction: false, hasBody: true, hasConclusion: false, comments: "Structure assessment unavailable" },
+    sentiment: { tone: "neutral", confidence: "medium", comments: "Sentiment analysis unavailable - using default values" },
+    structure: { score: structureScore, hasIntroduction: sentences >= 3, hasBody: sentences >= 2, hasConclusion: sentences >= 3, comments: "Structure assessment based on sentence count" },
     confidenceMarkers: { positive: [], negative: [] },
-    complexity: { cefrLevel: "B1", comments: "Estimated level based on word count" }
+    complexity: { cefrLevel: cefrLevel, comments: `Estimated level based on ${words} words and ${avgWordsPerSentence.toFixed(1)} words per sentence` }
   };
 }
 

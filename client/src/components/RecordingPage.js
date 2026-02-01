@@ -9,12 +9,16 @@ function RecordingPage({ round, onComplete, userTopic, setUserTopic }) {
   const [impromptuTopic, setImpromptuTopic] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [topicInput, setTopicInput] = useState(''); // Local state for input field
 
   useEffect(() => {
     if (round === 1) {
       fetchImpromptuTopic();
+    } else if (round === 2) {
+      // Initialize topicInput with existing userTopic if available
+      setTopicInput(userTopic || '');
     }
-  }, [round]);
+  }, [round, userTopic]);
 
   const fetchImpromptuTopic = async () => {
     try {
@@ -54,6 +58,13 @@ function RecordingPage({ round, onComplete, userTopic, setUserTopic }) {
     }
   };
 
+  const handleTopicSubmit = () => {
+    const trimmedTopic = topicInput.trim();
+    if (trimmedTopic) {
+      setUserTopic(trimmedTopic);
+    }
+  };
+
   if (round === 2 && !userTopic) {
     return (
       <div className="recording-page">
@@ -66,18 +77,18 @@ function RecordingPage({ round, onComplete, userTopic, setUserTopic }) {
               type="text"
               className="topic-input"
               placeholder="Enter your topic here..."
-              value={userTopic}
-              onChange={(e) => setUserTopic(e.target.value)}
+              value={topicInput}
+              onChange={(e) => setTopicInput(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter' && userTopic.trim()) {
-                  setUserTopic(userTopic.trim());
+                if (e.key === 'Enter' && topicInput.trim()) {
+                  handleTopicSubmit();
                 }
               }}
             />
             <button
               className="btn btn-primary"
-              onClick={() => setUserTopic(userTopic.trim())}
-              disabled={!userTopic.trim()}
+              onClick={handleTopicSubmit}
+              disabled={!topicInput.trim()}
             >
               Continue
             </button>

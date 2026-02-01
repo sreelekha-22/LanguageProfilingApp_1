@@ -6,11 +6,24 @@ function ResultsPage({ round1Results, round2Results, onStartOver }) {
   const renderAnalysis = (results, roundNumber) => {
     if (!results || !results.analysis) return null;
 
-    const { analysis, transcription } = results;
+    const { analysis, transcription, warning } = results;
 
     return (
       <div className="round-results">
         <h2 className="round-title">Round {roundNumber} Analysis</h2>
+        
+        {warning && (
+          <div className="warning-banner" style={{ 
+            background: '#fff3cd', 
+            border: '1px solid #ffc107', 
+            padding: '12px', 
+            borderRadius: '4px', 
+            marginBottom: '20px',
+            color: '#856404'
+          }}>
+            ⚠️ {warning}
+          </div>
+        )}
         
         <div className="transcription-section">
           <h3>Transcription</h3>
