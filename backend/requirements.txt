@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+python-multipart
+torch
+transformers
+opencv-python
+mediapipe==0.9.1
+numpy
+librosa
+soundfile
+spacy
+language-tool-python
+sentence-transformers
+scikit-learn
+openai-whisper

@@ -1,0 +1,34 @@
+cd backend
+
+py -3.10 -m venv myenv
+myenv\Scripts\activate
+
+pip install --upgrade pip
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+
+python -m spacy download en_core_web_sm
+
+pip install git+https://github.com/PrithivirajDamodaran/Gramformer.git
+
+
+python run.py
+
+http://localhost:5000
+
+------------
+3️⃣ Install FFmpeg (REQUIRED on Windows)
+
+Whisper will not work without FFmpeg.
+
+Easiest way (recommended)
+
+Download:
+👉 https://www.gyan.dev/ffmpeg/builds/
+
+Get ffmpeg-release-essentials.zip
+
+Extract
+Add bin/ folder to PATH
+Verify:
+ffmpeg -version
