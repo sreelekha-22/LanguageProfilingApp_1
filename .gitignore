@@ -11,4 +11,5 @@ server/node_modules/
 uploads/
 
 myenv
+__pycache__/
 
