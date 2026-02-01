@@ -1,0 +1,267 @@
+.video-recorder {
+  margin-top: 30px;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 20px;
+  border-radius: 15px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.video-preview {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.recording-indicator {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  z-index: 10;
+}
+
+.recording-dot {
+  width: 12px;
+  height: 12px;
+  background: #ff4444;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 150px;
+}
+
+.btn-record {
+  background: #ff4444;
+  color: white;
+}
+
+.btn-record:hover:not(:disabled) {
+  background: #cc0000;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 68, 68, 0.4);
+}
+
+.btn-stop {
+  background: #ff8800;
+  color: white;
+}
+
+.btn-stop:hover {
+  background: #cc6600;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 136, 0, 0.4);
+}
+
+.btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #ccc;
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.recording-info {
+  text-align: center;
+  margin-top: 20px;
+  color: #666;
+}
+
+.recording-info p {
+  margin: 5px 0;
+}
+
+.hint {
+  font-size: 14px;
+  font-style: italic;
+}
+
+.permission-request {
+  text-align: center;
+  padding: 60px 40px;
+  background: #f9f9f9;
+  border-radius: 15px;
+  border: 2px dashed #667eea;
+  margin: 20px 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.permission-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.permission-request h3 {
+  color: #333;
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+.permission-request > p {
+  color: #666;
+  font-size: 16px;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.permission-status {
+  padding: 15px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.permission-status.denied {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  color: #856404;
+}
+
+.permission-status.denied p {
+  margin: 5px 0;
+  font-weight: 600;
+}
+
+.hint-text {
+  font-size: 14px;
+  font-weight: normal;
+  font-style: italic;
+}
+
+.permission-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 30px 0;
+}
+
+.btn-permission {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 35px;
+  font-size: 18px;
+  min-width: 250px;
+  justify-content: center;
+}
+
+.btn-permission .icon {
+  font-size: 24px;
+}
+
+.spinner-small {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.permission-instructions {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.instructions-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.instructions-list {
+  background: white;
+  padding: 20px 20px 20px 40px;
+  border-radius: 10px;
+  border-left: 4px solid #667eea;
+  margin: 15px 0;
+  text-align: left;
+  list-style-position: outside;
+}
+
+.instructions-list li {
+  margin: 10px 0;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.video-recorder-error {
+  text-align: center;
+  padding: 40px 20px;
+  color: #c33;
+  background: #fee;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.video-recorder-error p {
+  margin: 10px 0;
+}
+
