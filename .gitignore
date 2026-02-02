@@ -11,5 +11,93 @@ server/node_modules/
 uploads/
 
 myenv
-__pycache__/
+*__pycache__/
+*.pyc
 
+# --------------------
+# Python
+# --------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# --------------------
+# Virtual Environments
+# --------------------
+.env
+.env.*
+venv/
+.venv/
+ENV/
+env/
+virtualenv/
+pip-wheel-metadata/
+
+# --------------------
+# FastAPI / Uvicorn
+# --------------------
+*.log
+uvicorn.log
+gunicorn.log
+
+# --------------------
+# Cache / Temp files
+# --------------------
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --------------------
+# IDEs & Editors
+# --------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*.iml
+
+# --------------------
+# OS files
+# --------------------
+.DS_Store
+Thumbs.db
+
+# --------------------
+# Build / Packaging
+# --------------------
+build/
+dist/
+*.egg-info/
+
+# --------------------
+# Database
+# --------------------
+*.db
+*.sqlite3
+
+# --------------------
+# Media / Uploads
+# --------------------
+uploads/
+media/
+audio/
+*.wav
+*.mp3
+*.m4a
+
+# --------------------
+# Secrets
+# --------------------
+secrets/
+*.pem
+*.key
+
+# --------------------
+# Logs
+# --------------------
+logs/

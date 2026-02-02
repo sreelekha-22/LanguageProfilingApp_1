@@ -1,33 +1,24 @@
 import spacy
-from collections import Counter
-from gramformer import Gramformer
 
-# Load SpaCy English model
 nlp = spacy.load("en_core_web_sm")
-
-# Initialize Gramformer for grammar correction (1 = corrector)
-gf = Gramformer(models=1, use_gpu=False)  # set use_gpu=True if you have GPU
 
 def analyze_text(text: str):
     doc = nlp(text)
-    
-    # Grammar correction suggestions
-    corrected_sentences = gf.correct(text)  # returns list of possible corrections
-    grammar_errors = max(len(corrected_sentences) - 1, 0)  # number of suggested fixes
 
-    # Vocabulary richness
+    sentences = list(doc.sents)
     words = [t.text.lower() for t in doc if t.is_alpha]
+
+    grammar_errors = 0
+    for sent in sentences:
+        has_verb = any(t.pos_ == "VERB" for t in sent)
+        if not has_verb:
+            grammar_errors += 1
+
     vocab_richness = len(set(words)) / max(len(words), 1)
 
     return {
-        "grammar_errors": grammar_errors,
-        "vocab_score": vocab_richness,
-        "sentence_count": len(list(doc.sents)),
-        "words": words
+        "grammar_errors_estimate": grammar_errors,
+        "vocab_score": round(vocab_richness, 3),
+        "sentence_count": len(sentences),
+        "word_count": len(words),
     }
-
-# Example usage
-if __name__ == "__main__":
-    text = "This is a example. She go to school everyday."
-    result = analyze_text(text)
-    print(result)

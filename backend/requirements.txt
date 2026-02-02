@@ -4,7 +4,7 @@ python-multipart
 torch
 transformers
 opencv-python
-mediapipe==0.9.1
+mediapipe
 numpy
 librosa
 soundfile

@@ -1,23 +1,37 @@
 def build_final_response(transcript, audio, nlp, video):
+    # ---------- Safe defaults ----------
+    audio = audio or {}
+    nlp = nlp or {}
+    video = video or {}
+
+    speech_rate = audio.get("speech_rate", 40)
+    filler_count = audio.get("filler_count", 0)
+
+    vocab_score = nlp.get("vocab_score", 0.6)
+    grammar_errors = nlp.get("grammar_errors", 0)
+
+    eye_contact_ratio = video.get("eye_contact_ratio", 0.5)
+    frames = video.get("frames", 0)
+
     return {
         "transcription": transcript,
         "analysis": {
             "fluency": {
-                "score": min(100, 60 + audio["speech_rate"]),
+                "score": min(100, 60 + speech_rate),
                 "comments": "Smooth with moderate pacing"
             },
             "vocabulary": {
-                "score": int(nlp["vocab_score"] * 100),
+                "score": int(vocab_score * 100),
                 "comments": "Adequate vocabulary range",
                 "sophisticatedWords": []
             },
             "grammar": {
-                "score": max(0, 100 - nlp["grammar_errors"] * 5),
+                "score": max(0, 100 - grammar_errors * 5),
                 "comments": "Minor grammatical issues",
                 "errors": []
             },
             "fillers": {
-                "count": audio["filler_count"],
+                "count": filler_count,
                 "pauseFrequency": "moderate",
                 "list": ["um", "uh"]
             },
@@ -31,7 +45,7 @@ def build_final_response(transcript, audio, nlp, video):
             "facialExpressions": {
                 "dominantEmotion": "neutral",
                 "confidence": {
-                    "score": int(video["eye_contact_ratio"] * 100),
+                    "score": int(eye_contact_ratio * 100),
                     "level": "medium",
                     "comments": "Consistent eye contact"
                 },
@@ -39,7 +53,7 @@ def build_final_response(transcript, audio, nlp, video):
                     "positive": 0,
                     "neutral": 0,
                     "negative": 0,
-                    "framesAnalyzed": video["frames"]
+                    "framesAnalyzed": frames
                 },
                 "observations": [
                     "Maintained eye contact",
