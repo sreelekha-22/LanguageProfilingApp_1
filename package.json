@@ -2,12 +2,15 @@
   "name": "lang-profiling-app",
   "version": "1.0.0",
   "description": "Full-stack language profiling application",
-  "main": "server/index.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "cd server && npm run dev",
+    "dev:unix": "concurrently \"npm run server:unix\" \"npm run client\"",
+    "server": "start-server.bat",
+    "server:unix": "./start-server.sh",
     "client": "cd client && npm start",
-    "install-all": "npm install && cd server && npm install && cd ../client && npm install"
+    "install-all": "npm install && cd client && npm install",
+    "setup": "setup.bat",
+    "setup:unix": "./setup.sh"
   },
   "keywords": ["language", "profiling", "speech", "analysis"],
   "author": "",

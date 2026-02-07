@@ -1,55 +1,98 @@
-# Quick Start Guide
+# Quick Start
 
-## 1. Install Dependencies
+## New Machine Setup
+
+### Automated (Recommended)
+
+**Windows:**
+```bash
+setup.bat
+```
+
+**macOS/Linux:**
+```bash
+chmod +x setup.sh && ./setup.sh
+```
+
+### Manual
 
 ```bash
+# 1. Install dependencies
 npm run install-all
+
+# 2. Setup Python backend
+cd backend
+py -3.10 -m venv myenv                    # Windows
+python3.10 -m venv myenv                  # macOS/Linux
+
+myenv\Scripts\activate                    # Windows
+source myenv/bin/activate                 # macOS/Linux
+
+pip install --upgrade pip
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+pip install git+https://github.com/PrithivirajDamodaran/Gramformer.git
+
+cd ..
+
+# 3. Create .env file in backend/
+echo "HUGGINGFACE_API_KEY=your_key_here" > backend/.env
+echo "PORT=5000" >> backend/.env
 ```
 
-## 2. Set Up API Key
-
-Create `server/.env` file:
-```
-OPENAI_API_KEY=sk-your-key-here
-PORT=5000
-```
-
-Get your free API key from: https://platform.openai.com/api-keys
-
-## 3. Start the Application
+## Running
 
 ```bash
-npm run dev
+# Start both frontend and backend
+npm run dev          # Windows
+npm run dev:unix     # macOS/Linux
 ```
 
-## 4. Open in Browser
+Or separately:
+```bash
+# Terminal 1: Backend
+start-server.bat     # Windows
+./start-server.sh    # macOS/Linux
 
-Navigate to: http://localhost:3000
+# Terminal 2: Frontend
+npm run client
+```
 
-## 5. Use the Application
+## Access
 
-1. **Round 1**: You'll be given an impromptu topic. Record yourself speaking for 2-4 minutes.
-2. **Round 2**: Choose your own topic and record yourself speaking for 2-4 minutes.
-3. **View Results**: See your comprehensive language profile with all metrics.
+- Frontend: http://localhost:3000
+- Backend: http://localhost:5000
 
-## Troubleshooting
+## Prerequisites Check
 
-- **Camera/Mic not working**: Check browser permissions
-- **API errors**: Verify your OpenAI API key and check your credits
-- **Port conflicts**: Change PORT in `server/.env` and update `REACT_APP_API_URL` in client
+- Node.js v16+: `node --version`
+- Python 3.10: `py -3.10 --version` / `python3.10 --version`
+- FFmpeg: `ffmpeg -version`
 
-## Features
+## Get API Key
 
-✅ Video recording with audio
-✅ Two rounds of speaking (impromptu + chosen topic)
-✅ Comprehensive language analysis:
-   - Fluency & coherence
-   - Vocabulary richness
-   - Grammar patterns
-   - Fillers & pauses
-   - Sentiment/tone
-   - Structure analysis
-   - Confidence markers
-   - CEFR complexity level
+1. Go to https://huggingface.co/settings/tokens
+2. Create free account
+3. Create token with "Read" permissions
+4. Add to `backend/.env`
 
+## Common Issues
 
+| Issue | Solution |
+|-------|----------|
+| FFmpeg not found | Install FFmpeg and add to PATH |
+| Python 3.10 not found | Install Python 3.10 from python.org |
+| Virtual env won't activate | Run `Set-ExecutionPolicy RemoteSigned` in PowerShell (Windows) |
+| Port 5000 in use | Change PORT in backend/.env |
+| Out of memory | Close other apps; models download on first run |
+
+## Project Commands
+
+```bash
+npm run dev          # Start both servers
+npm run server       # Start backend only (Windows)
+npm run server:unix  # Start backend only (macOS/Linux)
+npm run client       # Start frontend only
+npm run install-all  # Install all Node dependencies
+```
