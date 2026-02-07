@@ -22,8 +22,8 @@ A full-stack application that records user video and analyzes spoken language to
 ## Tech Stack
 
 - **Frontend**: React
-- **Backend**: Node.js/Express
-- **AI Models**: Hugging Face Inference API (completely free)
+- **Backend**: FastApi/Python 
+- **AI Models**: Models from Transformers
 - **Speech-to-Text**: Hugging Face Whisper Large v2
 
 ## Setup
