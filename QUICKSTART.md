@@ -37,8 +37,7 @@ pip install git+https://github.com/PrithivirajDamodaran/Gramformer.git
 cd ..
 
 # 3. Create .env file in backend/
-echo "HUGGINGFACE_API_KEY=your_key_here" > backend/.env
-echo "PORT=5000" >> backend/.env
+echo "PORT=5000" > backend/.env
 ```
 
 ## Running
@@ -70,12 +69,10 @@ npm run client
 - Python 3.10: `py -3.10 --version` / `python3.10 --version`
 - FFmpeg: `ffmpeg -version`
 
-## Get API Key
+## Notes
 
-1. Go to https://huggingface.co/settings/tokens
-2. Create free account
-3. Create token with "Read" permissions
-4. Add to `backend/.env`
+- All models run locally - no API keys required
+- Models download on first run (~2-3GB total)
 
 ## Common Issues
 

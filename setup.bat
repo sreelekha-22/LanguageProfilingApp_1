@@ -104,11 +104,9 @@ echo [7/8] Creating environment file...
 if not exist backend\.env (
     (
         echo # Language Profiling App Configuration
-        echo # Get your free Hugging Face token from: https://huggingface.co/settings/tokens
-        echo HUGGINGFACE_API_KEY=your_huggingface_api_key_here
         echo PORT=5000
     ) > backend\.env
-    echo Created backend\.env file. Please edit it and add your Hugging Face API key.
+    echo Created backend\.env file.
 ) else (
     echo backend\.env already exists. Skipping...
 )
@@ -119,15 +117,13 @@ echo  Setup Complete!
 echo ==========================================
 echo.
 echo To start the application:
-echo   1. Make sure you have added your Hugging Face API key to backend\.env
-echo   2. Run: npm run dev
+echo   Run: npm run dev
 echo.
 echo The application will be available at:
 echo   Frontend: http://localhost:3000
 echo   Backend:  http://localhost:5000
 echo.
-echo Get your FREE Hugging Face API key at:
-echo   https://huggingface.co/settings/tokens
+echo Note: All models run locally - no API keys required
 echo.
 
 pause

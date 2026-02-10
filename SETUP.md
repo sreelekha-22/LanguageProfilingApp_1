@@ -91,27 +91,21 @@ cd backend
 # Windows
 (
 echo # Language Profiling App Configuration
-echo # Get your free Hugging Face token from: https://huggingface.co/settings/tokens
-echo HUGGINGFACE_API_KEY=your_huggingface_api_key_here
 echo PORT=5000
 ) > .env
 
 # macOS/Linux
 cat > .env << 'EOF'
 # Language Profiling App Configuration
-# Get your free Hugging Face token from: https://huggingface.co/settings/tokens
-HUGGINGFACE_API_KEY=your_huggingface_api_key_here
 PORT=5000
 EOF
 
 cd ..
 ```
 
-**Get your FREE Hugging Face API Key:**
-1. Go to https://huggingface.co/settings/tokens
-2. Sign up for a free account (if you don't have one)
-3. Create a new token with "Read" permissions
-4. Copy the token and replace `your_huggingface_api_key_here` in the `.env` file
+**Note:**
+- Application uses local models only - no API keys required
+- All AI processing happens on your machine
 
 ---
 
@@ -209,14 +203,14 @@ If you get memory errors during model loading:
 2. The models will download on first run (~2-3 GB total)
 3. Subsequent runs will use cached models
 
-### API Errors / 410 Errors
+### Model Loading Issues
 
-If you see 410 errors or model unavailable errors:
+If models fail to load:
 
-1. Make sure you've added your Hugging Face API key to `backend/.env`
-2. Verify the API key has "Read" permissions
-3. Check your internet connection
-4. Some models may be temporarily unavailable - the app will use fallback methods
+1. Check your internet connection (models download on first run)
+2. Ensure sufficient disk space (~3GB for all models)
+3. Close other applications if memory is limited
+4. Models will be cached locally after first download
 
 ---
 

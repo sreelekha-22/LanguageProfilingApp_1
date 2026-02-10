@@ -22,9 +22,8 @@ A full-stack application that records user video and analyzes spoken language to
 ## Tech Stack
 
 - **Frontend**: React
-- **Backend**: Node.js/Express
-- **AI Models**: Hugging Face Inference API (completely free)
-- **Speech-to-Text**: Hugging Face Whisper Large v2
+- **Backend**: Python/FastAPI
+- **Speech-to-Text**: OpenAI Whisper (local)
 
 ## Setup
 
@@ -33,18 +32,14 @@ A full-stack application that records user video and analyzes spoken language to
 npm run install-all
 ```
 
-2. Create a `.env` file in the `server` directory:
+2. Create a `.env` file in the `backend` directory:
 ```
-HUGGINGFACE_API_KEY=your_huggingface_api_key_here
 PORT=5000
 ```
 
-**Note on Hugging Face API Key:**
-- **Hugging Face Inference API**: Completely free! Get your API key from https://huggingface.co/settings/tokens
-- **IMPORTANT**: An API key is now recommended as many models require authentication
-- Create a token with "Read" permissions at https://huggingface.co/settings/tokens
-- No credit card required - completely free to use
-- If you see 410 errors, it means models are unavailable - try getting an API key or check Hugging Face status
+**Note:**
+- The application uses local models (Whisper, spaCy, MediaPipe) - no API keys required
+- All processing happens locally on your machine
 
 3. Start the application:
 ```bash
